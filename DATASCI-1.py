@@ -20,7 +20,7 @@ st.title("🎓 Student Mental Health Dashboard & Predictor")
 tab1, tab2 = st.tabs(["📊 Dashboard", "🧠 Prediction"])
 
 with tab1:
-    st.header("Complete Dataset")
+    st.header("Student Mental Health Analysis Dataset")
     st.dataframe(data)
 
     # Plot 1: Gender distribution
@@ -35,15 +35,18 @@ with tab1:
         treatment_by_gender = data.groupby("Gender")["treatment"].value_counts().unstack().fillna(0)
         st.bar_chart(treatment_by_gender)
 
-    # Plot 3: Heatmap
-    st.subheader("Correlation Heatmap")
-    df_numeric = data.select_dtypes(include='number')
-    if not df_numeric.empty:
-        fig, ax = plt.subplots(figsize=(8, 5))
-        sns.heatmap(df_numeric.corr(), annot=True, cmap="coolwarm", ax=ax)
-        st.pyplot(fig)
+    # Plot 3: Scatterplot
+    import plotly.express as px
+    
+    st.subheader("Interactive Scatterplot: Screen Time vs Stress Level")
+    
+    if {'screen_time', 'stress_level'}.issubset(data.columns):
+        fig = px.scatter(data, x='screen_time', y='stress_level',
+                         color='treatment' if 'treatment' in data.columns else None,
+                         title="Screen Time vs Stress Level")
+        st.plotly_chart(fig)
     else:
-        st.info("No numeric columns to compute correlation.")
+        st.info("Required columns 'screen_time' and 'stress_level' are missing.")
 
 with tab2:
     st.header("Predict Mental Health Treatment Need")
