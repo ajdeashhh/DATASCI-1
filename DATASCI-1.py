@@ -48,12 +48,37 @@ with tab1:
 with tab2:
     st.header("Predict Mental Health Treatment Need")
 
-    st.sidebar.header("Input your details")
+    st.markdown("### Enter your details below:")
 
-    stress_level = st.sidebar.slider(
-        "Stress Level (1 = Low stress, 5 = High stress)",
+    screen_time = st.slider(
+        "Screen Time (hours per day)",
+        0.0, 16.0, 6.0, 0.5,
+        help="Average daily screen time in hours."
+    )
+
+    sleep_duration = st.slider(
+        "Sleep Duration (hours)",
+        0.0, 12.0, 7.0, 0.5,
+        help="Average daily sleep duration in hours."
+    )
+
+    physical_activity = st.slider(
+        "Physical Activity (hours per week)",
+        0.0, 20.0, 3.0, 0.5,
+        help="Total hours of physical activity per week."
+    )
+
+    stress_level = st.slider(
+        "Stress Level (1 = Low, 5 = High)",
         1, 5, 3,
         help="Rate your current stress level on a scale from 1 (lowest) to 5 (highest)."
+    )
+
+    anxious_before_exams = st.radio(
+        "Do you feel anxious before exams?",
+        options=["Yes", "No"],
+        index=1,
+        help="Select if you often feel anxious before exams."
     )
 
     perf_options = {
@@ -61,19 +86,27 @@ with tab2:
         "No Change": "Your academic performance has stayed about the same.",
         "Declined": "Your academic performance has declined recently."
     }
-    academic_performance_change = st.sidebar.selectbox(
+    academic_performance_change = st.selectbox(
         "Academic Performance Change",
         options=list(perf_options.keys()),
         help="Select how your academic performance has changed recently."
     )
-    st.sidebar.caption(perf_options[academic_performance_change])
+    st.caption(perf_options[academic_performance_change])
 
-    if st.sidebar.button("Predict"):
-        # Simple rule-based logic:
-        # Needs Treatment if stress is high (4 or 5) OR performance declined
-        if stress_level >= 4 or academic_performance_change == "Declined":
-            result = "Needs Treatment"
-        else:
-            result = "Does Not Need Treatment"
+    if st.button("Predict"):
+        # Rule-based logic
+        needs_treatment = False
 
+        if stress_level >= 4:
+            needs_treatment = True
+        if anxious_before_exams == "Yes":
+            needs_treatment = True
+        if academic_performance_change == "Declined":
+            needs_treatment = True
+        if physical_activity < 2:
+            needs_treatment = True
+        if sleep_duration < 6:
+            needs_treatment = True
+
+        result = "Needs Treatment" if needs_treatment else "Does Not Need Treatment"
         st.success(f"Based on your inputs, the prediction is: **{result}**")
