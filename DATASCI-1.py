@@ -48,25 +48,21 @@ with tab1:
 with tab2:
     st.header("Predict Mental Health Treatment Need")
 
-    # Debug: show columns loaded
-    st.write("Dataset columns:", data.columns.tolist())
-
     required_cols = {'screen_time', 'sleep_duration', 'treatment'}
+
+    # Check if all required columns exist
     if required_cols.issubset(data.columns):
-        # Select features and target
+        # All columns present — proceed safely
         X = data[['screen_time', 'sleep_duration']]
         y = data['treatment']
 
-        # Encode target if categorical
         if y.dtype == 'object':
             y = y.astype('category').cat.codes
 
-        # Train model
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
         model = RandomForestClassifier(random_state=42)
         model.fit(X_train, y_train)
 
-        # Sidebar inputs
         st.sidebar.header("Student Lifestyle Input")
         screen_time = st.sidebar.slider("Average Daily Screen Time (hrs)", 0.0, 16.0, 6.0, 0.5)
         sleep_duration = st.sidebar.slider("Average Sleep Duration (hrs)", 0.0, 12.0, 7.0, 0.5)
@@ -77,4 +73,6 @@ with tab2:
             result = "Needs Treatment" if prediction == 1 else "Does Not Need Treatment"
             st.success(f"Based on the input, the model predicts: **{result}**")
     else:
-        st.error("Required columns 'screen_time', 'sleep_duration', or 'treatment' are missing in your dataset.")
+        # Show this message instead of error
+        missing = required_cols.difference(data.columns)
+        st.error(f"Missing columns in dataset: {', '.join(missing)}")
