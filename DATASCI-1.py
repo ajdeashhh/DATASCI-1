@@ -35,18 +35,16 @@ with tab1:
         treatment_by_gender = data.groupby("Gender")["treatment"].value_counts().unstack().fillna(0)
         st.bar_chart(treatment_by_gender)
 
-    # Plot 3: Scatterplot
-    import plotly.express as px
+    # Plot 3: Violin Plot
+    st.subheader("Violin Plot of Screen Time by Treatment")
     
-    st.subheader("Interactive Scatterplot: Screen Time vs Stress Level")
-    
-    if {'screen_time', 'stress_level'}.issubset(data.columns):
-        fig = px.scatter(data, x='screen_time', y='stress_level',
-                         color='treatment' if 'treatment' in data.columns else None,
-                         title="Screen Time vs Stress Level")
-        st.plotly_chart(fig)
+    if {'screen_time', 'treatment'}.issubset(data.columns):
+        fig, ax = plt.subplots(figsize=(8, 5))
+        sns.violinplot(data=data, x='treatment', y='screen_time', palette="Pastel1", ax=ax)
+        ax.set_title("Screen Time Distribution by Treatment")
+        st.pyplot(fig)
     else:
-        st.info("Required columns 'screen_time' and 'stress_level' are missing.")
+        st.info("Required columns 'screen_time' and 'treatment' are missing.")
 
 with tab2:
     st.header("Predict Mental Health Treatment Need")
