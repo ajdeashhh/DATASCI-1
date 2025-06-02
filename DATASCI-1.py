@@ -35,16 +35,15 @@ with tab1:
         treatment_by_gender = data.groupby("Gender")["treatment"].value_counts().unstack().fillna(0)
         st.bar_chart(treatment_by_gender)
 
-    # Plot 3: Violin Plot
-    st.subheader("Violin Plot of Screen Time by Treatment")
-    
-    if {'screen_time', 'treatment'}.issubset(data.columns):
+    # Plot 3: Heatmap
+    st.subheader("Correlation Heatmap")
+    df_numeric = data.select_dtypes(include='number')
+    if not df_numeric.empty:
         fig, ax = plt.subplots(figsize=(8, 5))
-        sns.violinplot(data=data, x='treatment', y='screen_time', palette="Pastel1", ax=ax)
-        ax.set_title("Screen Time Distribution by Treatment")
+        sns.heatmap(df_numeric.corr(), annot=True, cmap="coolwarm", ax=ax)
         st.pyplot(fig)
     else:
-        st.info("Required columns 'screen_time' and 'treatment' are missing.")
+        st.info("No numeric columns to compute correlation.")
 
 with tab2:
     st.header("Predict Mental Health Treatment Need")
