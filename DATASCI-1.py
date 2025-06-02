@@ -47,23 +47,26 @@ with tab1:
 
 with tab2:
     st.header("Predict Mental Health Treatment Need")
-    
-    # Ensure required columns exist
-    if 'screen_time' in data.columns and 'sleep_duration' in data.columns and 'treatment' in data.columns:
+
+    # Debug: show columns loaded
+    st.write("Dataset columns:", data.columns.tolist())
+
+    required_cols = {'screen_time', 'sleep_duration', 'treatment'}
+    if required_cols.issubset(data.columns):
         # Select features and target
         X = data[['screen_time', 'sleep_duration']]
         y = data['treatment']
 
-        # Encode target if it's categorical
+        # Encode target if categorical
         if y.dtype == 'object':
             y = y.astype('category').cat.codes
 
         # Train model
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-        model = RandomForestClassifier()
+        model = RandomForestClassifier(random_state=42)
         model.fit(X_train, y_train)
 
-        # Input UI
+        # Sidebar inputs
         st.sidebar.header("Student Lifestyle Input")
         screen_time = st.sidebar.slider("Average Daily Screen Time (hrs)", 0.0, 16.0, 6.0, 0.5)
         sleep_duration = st.sidebar.slider("Average Sleep Duration (hrs)", 0.0, 12.0, 7.0, 0.5)
