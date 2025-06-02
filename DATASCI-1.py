@@ -1,19 +1,17 @@
-# app.py
-
 import streamlit as st
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.preprocessing import LabelEncoder
 
 st.set_page_config(layout="wide")
 
-# Load data
+# Load and display full dataset
 @st.cache_data
 def load_data():
-    return pd.read_csv("student_mental_health.csv")
+    df = pd.read_csv("student_mental_health.csv")
+    return df
 
 data = load_data()
 st.title("🎓 Student Mental Health Dashboard & Predictor")
@@ -22,20 +20,22 @@ st.title("🎓 Student Mental Health Dashboard & Predictor")
 tab1, tab2 = st.tabs(["📊 Dashboard", "🧠 Prediction"])
 
 with tab1:
-    st.header("Mental Health Data Overview")
-    st.dataframe(data.head())
+    st.header("Complete Dataset")
+    st.dataframe(data)
 
     # Plot 1: Gender distribution
-    st.subheader("Distribution by Gender")
-    gender_counts = data["Gender"].value_counts()
-    st.bar_chart(gender_counts)
+    if "Gender" in data.columns:
+        st.subheader("Distribution by Gender")
+        gender_counts = data["Gender"].value_counts()
+        st.bar_chart(gender_counts)
 
-    # Plot 2: Mental health treatment need by course
-    st.subheader("Treatment Need by Year of Study")
-    treatment_by_year = data.groupby("Year of Study")["treatment"].value_counts().unstack().fillna(0)
-    st.bar_chart(treatment_by_year)
+    # Plot 2: Treatment by Gender (if both columns exist)
+    if "Gender" in data.columns and "treatment" in data.columns:
+        st.subheader("Treatment Need by Gender")
+        treatment_by_gender = data.groupby("Gender")["treatment"].value_counts().unstack().fillna(0)
+        st.bar_chart(treatment_by_gender)
 
-    # Plot 3: Heatmap of correlations (if numeric data present)
+    # Plot 3: Heatmap
     st.subheader("Correlation Heatmap")
     df_numeric = data.select_dtypes(include='number')
     if not df_numeric.empty:
@@ -46,37 +46,32 @@ with tab1:
         st.info("No numeric columns to compute correlation.")
 
 with tab2:
-    st.header("Predict Student's Mental Health Treatment Need")
+    st.header("Predict Mental Health Treatment Need")
+    
+    # Ensure required columns exist
+    if 'screen_time' in data.columns and 'sleep_duration' in data.columns and 'treatment' in data.columns:
+        # Select features and target
+        X = data[['screen_time', 'sleep_duration']]
+        y = data['treatment']
 
-    # Preprocessing
-    df = data.copy()
-    label_encoders = {}
-    for col in df.select_dtypes(include='object').columns:
-        le = LabelEncoder()
-        df[col] = le.fit_transform(df[col])
-        label_encoders[col] = le
+        # Encode target if it's categorical
+        if y.dtype == 'object':
+            y = y.astype('category').cat.codes
 
-    X = df.drop("treatment", axis=1)
-    y = df["treatment"]
+        # Train model
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        model = RandomForestClassifier()
+        model.fit(X_train, y_train)
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    model = RandomForestClassifier()
-    model.fit(X_train, y_train)
+        # Input UI
+        st.sidebar.header("Student Lifestyle Input")
+        screen_time = st.sidebar.slider("Average Daily Screen Time (hrs)", 0.0, 16.0, 6.0, 0.5)
+        sleep_duration = st.sidebar.slider("Average Sleep Duration (hrs)", 0.0, 12.0, 7.0, 0.5)
 
-    # Input UI
-    st.sidebar.header("Input Student Details")
-    user_input = {}
-    for col in X.columns:
-        if col in label_encoders:
-            options = list(label_encoders[col].classes_)
-            user_input[col] = st.sidebar.selectbox(col, options)
-        else:
-            user_input[col] = st.sidebar.slider(col, float(data[col].min()), float(data[col].max()))
-
-    if st.sidebar.button("Predict"):
-        input_df = pd.DataFrame([user_input])
-        for col, le in label_encoders.items():
-            input_df[col] = le.transform(input_df[col])
-        prediction = model.predict(input_df)[0]
-        result = "Needs Treatment" if prediction == 1 else "Does Not Need Treatment"
-        st.success(f"The model predicts: **{result}**")
+        if st.sidebar.button("Predict"):
+            input_df = pd.DataFrame([[screen_time, sleep_duration]], columns=['screen_time', 'sleep_duration'])
+            prediction = model.predict(input_df)[0]
+            result = "Needs Treatment" if prediction == 1 else "Does Not Need Treatment"
+            st.success(f"Based on the input, the model predicts: **{result}**")
+    else:
+        st.error("Required columns 'screen_time', 'sleep_duration', or 'treatment' are missing in your dataset.")
