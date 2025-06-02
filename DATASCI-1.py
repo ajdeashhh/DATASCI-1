@@ -38,9 +38,37 @@ with tab1:
     # Plot 3: Heatmap
     st.subheader("Correlation Heatmap")
     df_numeric = data.select_dtypes(include='number')
+    
     if not df_numeric.empty:
-        fig, ax = plt.subplots(figsize=(8, 5))
-        sns.heatmap(df_numeric.corr(), annot=True, cmap="coolwarm", ax=ax)
+        corr = df_numeric.corr()
+    
+        # Mask upper triangle
+        mask = np.triu(np.ones_like(corr, dtype=bool))
+    
+        sns.set_theme(style="white")
+    
+        fig, ax = plt.subplots(figsize=(10, 7))
+    
+        cmap = sns.diverging_palette(220, 20, as_cmap=True)
+    
+        sns.heatmap(
+            corr,
+            mask=mask,
+            annot=True,
+            fmt=".2f",
+            annot_kws={"size":10, "weight":"bold", "color":"black"},
+            cmap=cmap,
+            center=0,
+            square=True,
+            linewidths=0.5,
+            cbar_kws={"shrink": 0.8, "label": "Correlation Coefficient"},
+            ax=ax
+        )
+    
+        ax.set_title("Feature Correlation Heatmap", fontsize=16, weight='bold')
+        plt.xticks(rotation=45, ha='right')
+        plt.yticks(rotation=0)
+        plt.tight_layout()
         st.pyplot(fig)
     else:
         st.info("No numeric columns to compute correlation.")
