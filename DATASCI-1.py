@@ -36,23 +36,14 @@ with tab1:
         st.bar_chart(treatment_by_gender)
 
     # Plot 3: Heatmap
-    st.subheader("🔍 Feature Correlation with Mental Health Treatment")
-    
-    target_col = "treatment"
+    st.subheader("Correlation Heatmap")
     df_numeric = data.select_dtypes(include='number')
-    
-    if target_col in df_numeric.columns and not df_numeric.empty:
-        # Drop target itself and get correlations
-        corr = df_numeric.corr()[target_col].drop(target_col).abs().sort_values(ascending=True)
-    
+    if not df_numeric.empty:
         fig, ax = plt.subplots(figsize=(8, 5))
-        sns.barplot(x=corr.values, y=corr.index, palette="mako", ax=ax)
-        ax.set_title("Absolute Correlation with Treatment", fontsize=14)
-        ax.set_xlabel("Correlation Strength")
-        ax.set_ylabel("Features")
+        sns.heatmap(df_numeric.corr(), annot=True, cmap="coolwarm", ax=ax)
         st.pyplot(fig)
     else:
-        st.info("Missing numeric data or 'treatment' column for correlation chart.")
+        st.info("No numeric columns to compute correlation.")
 
 with tab2:
     st.header("Predict Mental Health Treatment Need")
