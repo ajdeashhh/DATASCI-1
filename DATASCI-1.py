@@ -50,6 +50,9 @@ with tab2:
 
     required_cols = {'stress_level', 'academic_performance_change', 'treatment'}
 
+    # Show columns to debug
+    st.write("Columns in dataset:", data.columns.tolist())
+
     if required_cols.issubset(data.columns):
         df = data.copy()
 
@@ -67,12 +70,11 @@ with tab2:
 
         st.sidebar.header("Student Input")
         stress_level = st.sidebar.slider("Stress Level (1=Low, 5=High)", 1, 5, 3)
-        # Assuming academic_performance_change is categorical with 3 states, adapt if needed:
         perf_options = ["Improved", "No Change", "Declined"]
         academic_performance_change = st.sidebar.selectbox("Academic Performance Change", perf_options)
 
-        # Map the selectbox values to codes used in training
         perf_map = {name: code for code, name in enumerate(perf_options)}
+
         input_df = pd.DataFrame([{
             'stress_level': stress_level,
             'academic_performance_change': perf_map[academic_performance_change]
@@ -82,3 +84,8 @@ with tab2:
             prediction = model.predict(input_df)[0]
             result = "Needs Treatment" if prediction == 1 else "Does Not Need Treatment"
             st.success(f"Based on the input, the model predicts: **{result}**")
+
+    else:
+        missing = required_cols.difference(data.columns)
+        st.error(f"Missing columns in dataset: {', '.join(missing)}")
+
