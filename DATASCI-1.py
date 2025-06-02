@@ -48,31 +48,37 @@ with tab1:
 with tab2:
     st.header("Predict Mental Health Treatment Need")
 
-    required_cols = {'screen_time', 'sleep_duration', 'treatment'}
+    required_cols = {'stress_level', 'academic_performance_change', 'treatment'}
 
-    # Check if all required columns exist
     if required_cols.issubset(data.columns):
-        # All columns present — proceed safely
-        X = data[['screen_time', 'sleep_duration']]
-        y = data['treatment']
+        df = data.copy()
 
-        if y.dtype == 'object':
-            y = y.astype('category').cat.codes
+        # Encode categorical columns if needed
+        for col in ['stress_level', 'academic_performance_change', 'treatment']:
+            if df[col].dtype == 'object':
+                df[col] = df[col].astype('category').cat.codes
+
+        X = df[['stress_level', 'academic_performance_change']]
+        y = df['treatment']
 
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
         model = RandomForestClassifier(random_state=42)
         model.fit(X_train, y_train)
 
-        st.sidebar.header("Student Lifestyle Input")
-        screen_time = st.sidebar.slider("Average Daily Screen Time (hrs)", 0.0, 16.0, 6.0, 0.5)
-        sleep_duration = st.sidebar.slider("Average Sleep Duration (hrs)", 0.0, 12.0, 7.0, 0.5)
+        st.sidebar.header("Student Input")
+        stress_level = st.sidebar.slider("Stress Level (1=Low, 5=High)", 1, 5, 3)
+        # Assuming academic_performance_change is categorical with 3 states, adapt if needed:
+        perf_options = ["Improved", "No Change", "Declined"]
+        academic_performance_change = st.sidebar.selectbox("Academic Performance Change", perf_options)
+
+        # Map the selectbox values to codes used in training
+        perf_map = {name: code for code, name in enumerate(perf_options)}
+        input_df = pd.DataFrame([{
+            'stress_level': stress_level,
+            'academic_performance_change': perf_map[academic_performance_change]
+        }])
 
         if st.sidebar.button("Predict"):
-            input_df = pd.DataFrame([[screen_time, sleep_duration]], columns=['screen_time', 'sleep_duration'])
             prediction = model.predict(input_df)[0]
             result = "Needs Treatment" if prediction == 1 else "Does Not Need Treatment"
             st.success(f"Based on the input, the model predicts: **{result}**")
-    else:
-        # Show this message instead of error
-        missing = required_cols.difference(data.columns)
-        st.error(f"Missing columns in dataset: {', '.join(missing)}")
