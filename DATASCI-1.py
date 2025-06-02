@@ -36,42 +36,23 @@ with tab1:
         st.bar_chart(treatment_by_gender)
 
     # Plot 3: Heatmap
-    st.subheader("Correlation Heatmap")
+    st.subheader("🔍 Feature Correlation with Mental Health Treatment")
+    
+    target_col = "treatment"
     df_numeric = data.select_dtypes(include='number')
     
-    if not df_numeric.empty:
-        corr = df_numeric.corr()
+    if target_col in df_numeric.columns and not df_numeric.empty:
+        # Drop target itself and get correlations
+        corr = df_numeric.corr()[target_col].drop(target_col).abs().sort_values(ascending=True)
     
-        # Mask upper triangle
-        mask = np.triu(np.ones_like(corr, dtype=bool))
-    
-        sns.set_theme(style="white")
-    
-        fig, ax = plt.subplots(figsize=(10, 7))
-    
-        cmap = sns.diverging_palette(220, 20, as_cmap=True)
-    
-        sns.heatmap(
-            corr,
-            mask=mask,
-            annot=True,
-            fmt=".2f",
-            annot_kws={"size":10, "weight":"bold", "color":"black"},
-            cmap=cmap,
-            center=0,
-            square=True,
-            linewidths=0.5,
-            cbar_kws={"shrink": 0.8, "label": "Correlation Coefficient"},
-            ax=ax
-        )
-    
-        ax.set_title("Feature Correlation Heatmap", fontsize=16, weight='bold')
-        plt.xticks(rotation=45, ha='right')
-        plt.yticks(rotation=0)
-        plt.tight_layout()
+        fig, ax = plt.subplots(figsize=(8, 5))
+        sns.barplot(x=corr.values, y=corr.index, palette="mako", ax=ax)
+        ax.set_title("Absolute Correlation with Treatment", fontsize=14)
+        ax.set_xlabel("Correlation Strength")
+        ax.set_ylabel("Features")
         st.pyplot(fig)
     else:
-        st.info("No numeric columns to compute correlation.")
+        st.info("Missing numeric data or 'treatment' column for correlation chart.")
 
 with tab2:
     st.header("Predict Mental Health Treatment Need")
