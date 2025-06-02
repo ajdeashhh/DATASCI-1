@@ -31,9 +31,9 @@ with tab1:
     st.bar_chart(gender_counts)
 
     # Plot 2: Mental health treatment need by course
-    st.subheader("Treatment Need by Course")
-    treatment_by_course = data.groupby("Course")["treatment"].value_counts().unstack().fillna(0)
-    st.bar_chart(treatment_by_course)
+    st.subheader("Treatment Need by Year of Study")
+    treatment_by_year = data.groupby("Year of Study")["treatment"].value_counts().unstack().fillna(0)
+    st.bar_chart(treatment_by_year)
 
     # Plot 3: Heatmap of correlations (if numeric data present)
     st.subheader("Correlation Heatmap")
