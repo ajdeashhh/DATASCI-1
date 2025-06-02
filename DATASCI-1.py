@@ -50,9 +50,6 @@ with tab2:
 
     required_cols = {'stress_level', 'academic_performance_change', 'treatment'}
 
-    # Show columns to debug
-    st.write("Columns in dataset:", data.columns.tolist())
-
     if required_cols.issubset(data.columns):
         df = data.copy()
 
@@ -68,13 +65,27 @@ with tab2:
         model = RandomForestClassifier(random_state=42)
         model.fit(X_train, y_train)
 
-        st.sidebar.header("Student Input")
-        stress_level = st.sidebar.slider("Stress Level (1=Low, 5=High)", 1, 5, 3)
-        perf_options = ["Improved", "No Change", "Declined"]
-        academic_performance_change = st.sidebar.selectbox("Academic Performance Change", perf_options)
+        st.sidebar.header("Input your details")
 
-        perf_map = {name: code for code, name in enumerate(perf_options)}
+        stress_level = st.sidebar.slider(
+            "Stress Level (1 = Low stress, 5 = High stress)",
+            1, 5, 3,
+            help="Rate your current stress level on a scale from 1 (lowest) to 5 (highest)."
+        )
 
+        perf_options = {
+            "Improved": "Your academic performance has improved recently.",
+            "No Change": "Your academic performance has stayed about the same.",
+            "Declined": "Your academic performance has declined recently."
+        }
+        academic_performance_change = st.sidebar.selectbox(
+            "Academic Performance Change",
+            options=list(perf_options.keys()),
+            help="Select how your academic performance has changed recently."
+        )
+        st.sidebar.caption(perf_options[academic_performance_change])
+
+        perf_map = {name: code for code, name in enumerate(perf_options.keys())}
         input_df = pd.DataFrame([{
             'stress_level': stress_level,
             'academic_performance_change': perf_map[academic_performance_change]
@@ -83,9 +94,8 @@ with tab2:
         if st.sidebar.button("Predict"):
             prediction = model.predict(input_df)[0]
             result = "Needs Treatment" if prediction == 1 else "Does Not Need Treatment"
-            st.success(f"Based on the input, the model predicts: **{result}**")
+            st.success(f"Based on your inputs, the model predicts: **{result}**")
 
     else:
         missing = required_cols.difference(data.columns)
         st.error(f"Missing columns in dataset: {', '.join(missing)}")
-
